@@ -7,7 +7,7 @@
         extending the class
 **/
 
-import { clone } from 'lodash';
+import {clone} from 'lodash';
 import eventsBinder from '../utils/eventsBinder.js';
 import propsBinder from '../utils/propsBinder.js';
 import MapElementMixin from './mapElementMixin';
@@ -80,7 +80,15 @@ export default {
     eventsBinder(this, this.$clusterObject, events);
   },
 
-  detached() {
-    this.$clusterObject.clearMarkers();
+  beforeDestroy() {
+    /* Performance optimization when destroying a large number of markers */
+    this.$children.forEach(marker => {
+      if (marker.$clusterObject === this.$clusterObject) {
+        marker.$clusterObject = null
+      }
+    })
+    if (this.$clusterObject) {
+      this.$clusterObject.clearMarkers();
+    }
   },
 };

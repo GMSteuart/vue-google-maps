@@ -4,9 +4,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _lodash = require('lodash');
+var _mapValues2 = require('lodash/mapValues');
 
-var _lodash2 = _interopRequireDefault(_lodash);
+var _mapValues3 = _interopRequireDefault(_mapValues2);
 
 var _eventsBinder = require('../utils/eventsBinder.js');
 
@@ -55,6 +55,9 @@ var props = {
   opacity: {
     type: Number,
     default: 1
+  },
+  options: {
+    type: Object
   },
   place: {
     type: Object
@@ -121,10 +124,12 @@ exports.default = {
   deferredReady: function deferredReady() {
     var _this = this;
 
-    var options = _lodash2.default.mapValues(props, function (value, prop) {
+    var options = (0, _mapValues3.default)(props, function (value, prop) {
       return _this[prop];
     });
     options.map = this.$map;
+    delete options.options;
+    Object.assign(options, this.options);
 
     // search ancestors for cluster object
     var search = this.$findAncestor(function (ans) {

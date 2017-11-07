@@ -1,4 +1,4 @@
-import { assign, clone, omit } from 'lodash';
+import {omit, clone} from 'lodash';
 
 import { loaded } from '../manager.js';
 import { DeferredReadyMixin } from '../utils/deferredReady.js';
@@ -6,7 +6,6 @@ import eventsBinder from '../utils/eventsBinder.js';
 import propsBinder from '../utils/propsBinder.js';
 import getPropsMixin from '../utils/getPropsValuesMixin.js';
 import mountableMixin from '../utils/mountableMixin.js';
-import latlngChangedHandler from '../utils/latlngChangedHandler.js';
 
 const props = {
   center: {
@@ -57,19 +56,18 @@ const events = [
 ];
 
 // Plain Google Maps methods exposed here for convenience
-const linkedMethods = _([
+const linkedMethods = [
   'panBy',
   'panTo',
   'panToBounds',
   'fitBounds'
-])
-  .map(methodName => [methodName, function () {
+].reduce((all, methodName) => {
+  all[methodName] = function () {
     if (this.$mapObject)
-      this.$mapObject[methodName].apply(this.$mapObject, arguments);
-  }])
-  .fromPairs()
-  .value()
-  ;
+      this.$mapObject[methodName].apply(this.$mapObject, arguments)
+  }
+  return all
+}, {})
 
 // Other convenience methods exposed by Vue Google Maps
 const customMethods = {
@@ -96,7 +94,7 @@ const customMethods = {
 };
 
 // Methods is a combination of customMethods and linkedMethods
-const methods = assign({}, customMethods, linkedMethods);
+const methods = Object.assign({}, customMethods, linkedMethods);
 
 export default {
   mixins: [getPropsMixin, DeferredReadyMixin, mountableMixin],
@@ -107,17 +105,31 @@ export default {
     this.$mapCreated = new Promise((resolve, reject) => {
       this.$mapCreatedDeferred = { resolve, reject };
     });
+
+    const updateCenter = () => {
+      if (!this.$mapObject) return;
+
+      this.$mapObject.setCenter({
+        lat: this.finalLat,
+        lng: this.finalLng,
+      })
+    }
+    this.$watch('finalLat', updateCenter)
+    this.$watch('finalLng', updateCenter)
+  },
+
+  computed: {
+    finalLat () {
+      return this.center &&
+        (typeof this.center.lat === 'function') ? this.center.lat() : this.center.lat
+    },
+    finalLng () {
+      return this.center &&
+        (typeof this.center.lng === 'function') ? this.center.lng() : this.center.lng
+    },
   },
 
   watch: {
-    center: {
-      deep: true,
-      handler: latlngChangedHandler(function (val, oldVal) { // eslint-disable-line no-unused-vars
-        if (this.$mapObject) {
-          this.$mapObject.setCenter(val);
-        }
-      }),
-    },
     zoom(zoom) {
       if (this.$mapObject) {
         this.$mapObject.setZoom(zoom);
@@ -134,7 +146,7 @@ export default {
       const copiedData = clone(this.getPropsValues());
       delete copiedData.options;
       const options = clone(this.options);
-      assign(options, copiedData);
+      Object.assign(options, copiedData);
       this.$mapObject = new google.maps.Map(element, options);
 
       // binding properties (two and one way)
@@ -158,9 +170,9 @@ export default {
 
       return this.$mapCreated;
     })
-      .catch((error) => {
-        throw error;
-      });
+    .catch((error) => {
+      throw error;
+    });
   },
   methods: methods
 };

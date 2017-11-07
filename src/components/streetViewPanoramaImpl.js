@@ -1,4 +1,4 @@
-import { assign, defaults, omit } from 'lodash';
+import {omit} from 'lodash';
 
 import {loaded} from '../manager.js';
 import {DeferredReadyMixin} from '../utils/deferredReady.js';
@@ -6,7 +6,6 @@ import eventsBinder from '../utils/eventsBinder.js';
 import propsBinder from '../utils/propsBinder.js';
 import getPropsMixin from '../utils/getPropsValuesMixin.js';
 import mountableMixin from '../utils/mountableMixin.js';
-import latlngChangedHandler from '../utils/latlngChangedHandler.js';
 
 const props = {
   zoom: {
@@ -57,7 +56,7 @@ const customMethods = {
 };
 
 // Methods is a combination of customMethods and linkedMethods
-const methods = assign({}, customMethods);
+const methods = Object.assign({}, customMethods);
 
 export default {
   mixins: [getPropsMixin, DeferredReadyMixin, mountableMixin],
@@ -69,17 +68,31 @@ export default {
     this.$panoCreated = new Promise((resolve, reject) => {
       this.$panoCreatedDeferred = {resolve, reject};
     });
+
+    const updateCenter = () => {
+      if (!this.panoObject) return;
+
+      this.$panoObject.setPosition({
+        lat: this.finalLat,
+        lng: this.finalLng,
+      })
+    }
+    this.$watch('finalLat', updateCenter)
+    this.$watch('finalLng', updateCenter)
+  },
+
+  computed: {
+    finalLat () {
+      return this.position &&
+        (typeof this.position.lat === 'function') ? this.position.lat() : this.position.lat
+    },
+    finalLng () {
+      return this.position &&
+        (typeof this.position.lng === 'function') ? this.position.lng() : this.position.lng
+    },
   },
 
   watch: {
-    position: {
-      deep: true,
-      handler: latlngChangedHandler(function(val, oldVal) { // eslint-disable-line no-unused-vars
-        if (this.$panoObject) {
-          this.$panoObject.setPosition(val);
-        }
-      }),
-    },
     zoom(zoom) {
       if (this.$panoObject) {
         this.$panoObject.setZoom(zoom);
@@ -93,9 +106,9 @@ export default {
       const element = this.$refs['vue-street-view-pano'];
 
       // creating the map
-      const options = defaults({},
-          omit(this.getPropsValues(), ['options']),
-          this.options
+      const options = Object.assign({},
+          this.options,
+          omit(this.getPropsValues(), ['options'])
         );
 
       this.$panoObject = new google.maps.StreetViewPanorama(element, options);

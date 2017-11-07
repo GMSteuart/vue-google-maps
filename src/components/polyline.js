@@ -1,4 +1,4 @@
-import { assign, clone, omit } from 'lodash';
+import {omit, clone} from 'lodash'
 
 import eventBinder from '../utils/eventsBinder.js';
 import propsBinder from '../utils/propsBinder.js';
@@ -55,7 +55,7 @@ export default {
   deferredReady() {
     const options = clone(this.getPropsValues());
     delete options.options;
-    assign(options, this.options);
+    Object.assign(options, this.options);
     this.$polylineObject = new google.maps.Polyline(options);
     this.$polylineObject.setMap(this.$map);
 

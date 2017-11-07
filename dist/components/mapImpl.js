@@ -4,13 +4,13 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _promise = require('babel-runtime/core-js/promise');
+var _clone2 = require('lodash/clone');
 
-var _promise2 = _interopRequireDefault(_promise);
+var _clone3 = _interopRequireDefault(_clone2);
 
-var _lodash = require('lodash');
+var _omit2 = require('lodash/omit');
 
-var _lodash2 = _interopRequireDefault(_lodash);
+var _omit3 = _interopRequireDefault(_omit2);
 
 var _manager = require('../manager.js');
 
@@ -31,10 +31,6 @@ var _getPropsValuesMixin2 = _interopRequireDefault(_getPropsValuesMixin);
 var _mountableMixin = require('../utils/mountableMixin.js');
 
 var _mountableMixin2 = _interopRequireDefault(_mountableMixin);
-
-var _latlngChangedHandler = require('../utils/latlngChangedHandler.js');
-
-var _latlngChangedHandler2 = _interopRequireDefault(_latlngChangedHandler);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -76,14 +72,15 @@ var props = {
 var events = ['click', 'dblclick', 'drag', 'dragend', 'dragstart', 'idle', 'mousemove', 'mouseout', 'mouseover', 'resize', 'rightclick', 'tilesloaded'];
 
 // Plain Google Maps methods exposed here for convenience
-var linkedMethods = (0, _lodash2.default)(['panBy', 'panTo', 'panToBounds', 'fitBounds']).map(function (methodName) {
-  return [methodName, function () {
+var linkedMethods = ['panBy', 'panTo', 'panToBounds', 'fitBounds'].reduce(function (all, methodName) {
+  all[methodName] = function () {
     if (this.$mapObject) this.$mapObject[methodName].apply(this.$mapObject, arguments);
-  }];
-}).fromPairs().value();
+  };
+  return all;
+}, {}
 
 // Other convenience methods exposed by Vue Google Maps
-var customMethods = {
+);var customMethods = {
   resize: function resize() {
     if (this.$mapObject) {
       google.maps.event.trigger(this.$mapObject, 'resize');
@@ -107,7 +104,7 @@ var customMethods = {
 };
 
 // Methods is a combination of customMethods and linkedMethods
-var methods = _lodash2.default.assign({}, customMethods, linkedMethods);
+var methods = Object.assign({}, customMethods, linkedMethods);
 
 exports.default = {
   mixins: [_getPropsValuesMixin2.default, _deferredReady.DeferredReadyMixin, _mountableMixin2.default],
@@ -117,22 +114,33 @@ exports.default = {
   created: function created() {
     var _this = this;
 
-    this.$mapCreated = new _promise2.default(function (resolve, reject) {
+    this.$mapCreated = new Promise(function (resolve, reject) {
       _this.$mapCreatedDeferred = { resolve: resolve, reject: reject };
     });
+
+    var updateCenter = function updateCenter() {
+      if (!_this.$mapObject) return;
+
+      _this.$mapObject.setCenter({
+        lat: _this.finalLat,
+        lng: _this.finalLng
+      });
+    };
+    this.$watch('finalLat', updateCenter);
+    this.$watch('finalLng', updateCenter);
   },
 
 
-  watch: {
-    center: {
-      deep: true,
-      handler: (0, _latlngChangedHandler2.default)(function (val, oldVal) {
-        // eslint-disable-line no-unused-vars
-        if (this.$mapObject) {
-          this.$mapObject.setCenter(val);
-        }
-      })
+  computed: {
+    finalLat: function finalLat() {
+      return this.center && typeof this.center.lat === 'function' ? this.center.lat() : this.center.lat;
     },
+    finalLng: function finalLng() {
+      return this.center && typeof this.center.lng === 'function' ? this.center.lng() : this.center.lng;
+    }
+  },
+
+  watch: {
     zoom: function zoom(_zoom) {
       if (this.$mapObject) {
         this.$mapObject.setZoom(_zoom);
@@ -148,14 +156,14 @@ exports.default = {
       var element = _this2.$refs['vue-map'];
 
       // creating the map
-      var copiedData = _lodash2.default.clone(_this2.getPropsValues());
+      var copiedData = (0, _clone3.default)(_this2.getPropsValues());
       delete copiedData.options;
-      var options = _lodash2.default.clone(_this2.options);
-      _lodash2.default.assign(options, copiedData);
+      var options = (0, _clone3.default)(_this2.options);
+      Object.assign(options, copiedData);
       _this2.$mapObject = new google.maps.Map(element, options);
 
       // binding properties (two and one way)
-      (0, _propsBinder2.default)(_this2, _this2.$mapObject, _lodash2.default.omit(props, ['center', 'zoom', 'bounds']));
+      (0, _propsBinder2.default)(_this2, _this2.$mapObject, (0, _omit3.default)(props, ['center', 'zoom', 'bounds']));
 
       // manually trigger center and zoom
       _this2.$mapObject.addListener('center_changed', function () {

@@ -1,4 +1,4 @@
-import { clone, omit } from 'lodash';
+import {omit, clone} from 'lodash';
 import propsBinder from '../utils/propsBinder.js';
 import eventsBinder from '../utils/eventsBinder.js';
 import MapElementMixin from './mapElementMixin';
@@ -10,8 +10,6 @@ const props = {
     default () {
       return {};
     }
-  },
-  content: {
   },
   opened: {
     type: Boolean,

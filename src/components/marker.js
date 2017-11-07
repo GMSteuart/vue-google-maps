@@ -1,4 +1,4 @@
-import { mapValues } from 'lodash';
+import {mapValues} from 'lodash';
 import eventsBinder from '../utils/eventsBinder.js';
 import propsBinder from '../utils/propsBinder.js';
 import getPropsValuesMixin from '../utils/getPropsValuesMixin.js';
@@ -34,6 +34,9 @@ const props = {
   opacity: {
     type: Number,
     default: 1
+  },
+  options: {
+    type: Object
   },
   place: {
     type: Object
@@ -117,6 +120,8 @@ export default {
   deferredReady() {
     const options = mapValues(props, (value, prop) => this[prop]);
     options.map = this.$map;
+    delete options.options;
+    Object.assign(options, this.options);
 
     // search ancestors for cluster object
     let search = this.$findAncestor(
