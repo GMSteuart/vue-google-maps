@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { clone, defaults, pickBy, omit } from 'lodash';
 import propsBinder from '../utils/propsBinder.js';
 import downArrowSimulator from '../utils/simulateArrowDown.js';
 import getPropsValuesMixin from '../utils/getPropsValuesMixin.js';
@@ -43,7 +43,7 @@ export default {
 
   mounted() {
     loaded.then(() => {
-      const options = _.clone(this.getPropsValues());
+      const options = clone(this.getPropsValues());
       if (this.selectFirstOnEnter) {
         downArrowSimulator(this.$refs.input);
       }
@@ -52,10 +52,10 @@ export default {
         'google.maps.places.Autocomplete is undefined. Did you add \'places\' to libraries when loading Google Maps?');
 
       /* eslint-disable no-unused-vars */
-      const finalOptions = _.pickBy(_.defaults(
+      const finalOptions = pickBy(defaults(
         {},
         options.options,
-        _.omit(options, ['options', 'selectFirstOnEnter', 'value', 'place', 'placeholder'])
+        omit(options, ['options', 'selectFirstOnEnter', 'value', 'place', 'placeholder'])
       ), (v, k) => v !== undefined);
 
       // Component restrictions is rather particular. Undefined not allowed
@@ -66,7 +66,7 @@ export default {
       });
 
       this.$autocomplete = new google.maps.places.Autocomplete(this.$refs.input, finalOptions);
-      propsBinder(this, this.$autocomplete, _.omit(props, ['placeholder', 'place', 'selectFirstOnEnter', 'value', 'componentRestrictions']));
+      propsBinder(this, this.$autocomplete, omit(props, ['placeholder', 'place', 'selectFirstOnEnter', 'value', 'componentRestrictions']));
 
       this.$autocomplete.addListener('place_changed', () => {
         this.$emit('place_changed', this.$autocomplete.getPlace());

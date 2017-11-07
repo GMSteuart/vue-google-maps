@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { assign, clone, omit } from 'lodash';
 
 import eventBinder from '../utils/eventsBinder.js';
 import propsBinder from '../utils/propsBinder.js';
@@ -53,13 +53,13 @@ export default {
   },
 
   deferredReady() {
-    const options = _.clone(this.getPropsValues());
+    const options = clone(this.getPropsValues());
     delete options.options;
-    _.assign(options, this.options);
+    assign(options, this.options);
     this.$polylineObject = new google.maps.Polyline(options);
     this.$polylineObject.setMap(this.$map);
 
-    propsBinder(this, this.$polylineObject, _.omit(props, ['deepWatch', 'path']));
+    propsBinder(this, this.$polylineObject, omit(props, ['deepWatch', 'path']));
     eventBinder(this, this.$polylineObject, events);
 
     var clearEvents = () => {};

@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { assign, defaults, omit } from 'lodash';
 
 import {loaded} from '../manager.js';
 import {DeferredReadyMixin} from '../utils/deferredReady.js';
@@ -57,7 +57,7 @@ const customMethods = {
 };
 
 // Methods is a combination of customMethods and linkedMethods
-const methods = _.assign({}, customMethods);
+const methods = assign({}, customMethods);
 
 export default {
   mixins: [getPropsMixin, DeferredReadyMixin, mountableMixin],
@@ -93,8 +93,8 @@ export default {
       const element = this.$refs['vue-street-view-pano'];
 
       // creating the map
-      const options = _.defaults({},
-          _.omit(this.getPropsValues(), ['options']),
+      const options = defaults({},
+          omit(this.getPropsValues(), ['options']),
           this.options
         );
 
@@ -102,7 +102,7 @@ export default {
 
       // binding properties (two and one way)
       propsBinder(this, this.$panoObject,
-          _.omit(props, ['position', 'zoom']));
+          omit(props, ['position', 'zoom']));
 
       //binding events
       eventsBinder(this, this.$panoObject, events);

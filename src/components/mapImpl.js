@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { assign, clone, omit } from 'lodash';
 
 import { loaded } from '../manager.js';
 import { DeferredReadyMixin } from '../utils/deferredReady.js';
@@ -96,7 +96,7 @@ const customMethods = {
 };
 
 // Methods is a combination of customMethods and linkedMethods
-const methods = _.assign({}, customMethods, linkedMethods);
+const methods = assign({}, customMethods, linkedMethods);
 
 export default {
   mixins: [getPropsMixin, DeferredReadyMixin, mountableMixin],
@@ -131,14 +131,14 @@ export default {
       const element = this.$refs['vue-map'];
 
       // creating the map
-      const copiedData = _.clone(this.getPropsValues());
+      const copiedData = clone(this.getPropsValues());
       delete copiedData.options;
-      const options = _.clone(this.options);
-      _.assign(options, copiedData);
+      const options = clone(this.options);
+      assign(options, copiedData);
       this.$mapObject = new google.maps.Map(element, options);
 
       // binding properties (two and one way)
-      propsBinder(this, this.$mapObject, _.omit(props, ['center', 'zoom', 'bounds']));
+      propsBinder(this, this.$mapObject, omit(props, ['center', 'zoom', 'bounds']));
 
       // manually trigger center and zoom
       this.$mapObject.addListener('center_changed', () => {
